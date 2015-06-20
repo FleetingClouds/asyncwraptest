@@ -20,7 +20,7 @@ Tinytest.add('Get "Fido" in console.log. Always returns PASS !', function (test)
 /*  ~      ~      ~      ~      ~      ~      ~      ~      ~    */
 
 
-var thePet = {petId:1991928426};
+var aPet = {petId:1991928426};
 var mimeType = {responseContentType: 'application/json'};
 var callbackGetPetById = function(pet) {  console.log('pet', pet.data);  };
 
@@ -29,7 +29,7 @@ Tinytest.add('Get "Fido" test function but with more succinct command!', functio
   var swagger = new Swagger({
     url: swaggerSpecURL,
     success: function() {
-      swagger.pet.getPetById(  thePet, mimeType, callbackGetPetById  );
+      swagger.pet.getPetById(  aPet, mimeType, callbackGetPetById  );
       swagger.store.getOrderById.help()
     }
   });
@@ -54,12 +54,12 @@ var getSwaggerProxy = Meteor._wrapAsync( function (swaggerSpecURL, callback) {
 
 var swagger = getSwaggerProxy(swaggerSpecURL);
 
-var getPetById = function (arguments, headers, done) {
+var getPetById = function (arguments, headers, success, error) {
   swagger["pet"]["getPetById"](
       arguments
     , headers
-    , function ( theResult ) {  done(null, theResult);  }
-    , function (  theError ) {  done(null,  theError);  }
+    , function ( theResult ) {  success(null, theResult);  }
+    , function (  theError ) {    error(null, theError );  }
   )
 }
 
@@ -68,7 +68,7 @@ var wrappedGetPetById = Meteor._wrapAsync(  getPetById  );
 
 Tinytest.add('Get "Fido" test function ::  Try with Async.wrap()!', function (test) {
 
-  var jsonPet = wrappedGetPetById ( thePet, mimeType );
+  var jsonPet = wrappedGetPetById ( aPet, mimeType );
   var pet = JSON.parse(jsonPet.data)
   console.log('pet', pet); 
   test.equal(pet.name, "Fido");
@@ -76,12 +76,49 @@ Tinytest.add('Get "Fido" test function ::  Try with Async.wrap()!', function (te
 /*  ~      ~      ~      ~      ~      ~      ~      ~      ~    */
 
 
-var getUserByName = function (arguments, headers, done) {
+
+var getSwaggerProxy = Meteor._wrapAsync( function (swaggerSpecURL, callback) {
+  var prxySwagger = new Swagger({
+      url: swaggerSpecURL
+    , success : function() {
+        callback(null, prxySwagger);
+      }
+    , error : function() {
+        callback(null, prxySwagger);
+      }
+  });
+});
+
+var swagger = getSwaggerProxy(swaggerSpecURL);
+
+    var wrappedGetPetById = Meteor._wrapAsync(  
+      function (arguments, headers, success, error) {
+        swagger["pet"]["getPetById"](
+            arguments
+          , headers
+          , function ( theResult ) {  success(null, theResult);  }
+          , function (  theError ) {    error(null, theError );  }
+        )
+      }
+    );
+
+
+    Tinytest.add('Get "Fido" test function ::  Try with Async.wrap() succinct!', function (test) {
+
+      var jsonPet = wrappedGetPetById ( aPet, mimeType );
+      var pet = JSON.parse(jsonPet.data)
+      console.log('pet', pet); 
+      test.equal(pet.name, "Fido");
+    });
+/*  ~      ~      ~      ~      ~      ~      ~      ~      ~    */
+
+
+var getUserByName = function (arguments, headers, success, error) {
   swagger["user"]["getUserByName"](
       arguments
     , headers
-    , function ( theResult ) {  done(null, theResult);  }
-    , function (  theError ) {  done(null,  theError);  }
+    , function ( theResult ) {  console.log("xxxxxxxxxxxxxxxxxxxxx"); success(null, theResult);  }
+    , function (  theError ) {  console.log("zzzzzzzzzzzzzzzzzzzzz");   error(null, theError);  }
   )
 }
 
@@ -123,12 +160,12 @@ function collectMethods(host, mode) {
 
 
               collectedMethods[elem][nameMethod] = Meteor._wrapAsync( 
-                function (arguments, headers, done) {
+                function (arguments, headers, success, error) {
                   entity[nameMethod](
                       arguments
                     , headers
-                    , function ( theResult ) {  done(null, theResult);  }
-                    , function (  theError ) {  done(null,  theError);  }
+                    , function ( theResult ) {  console.log("xxxxxxxxxxxxxxxxxxxxx"); success(null, theResult);  }
+                    , function (  theError ) {  console.log("zzzzzzzzzzzzzzzzzzzzz");   error(null, theError);  }
                   )
                 }
               );
@@ -159,7 +196,7 @@ Tinytest.add('Get "Fido" test function ::  Try with Async.wrap() around pointer 
 
   var getPetById = Meteor._wrapAsync(  asyncGetPetById  );
 
-  var jsonPet = getPetById ( thePet, mimeType );
+  var jsonPet = getPetById ( aPet, mimeType );
   var pet = JSON.parse(jsonPet.data)
   console.log('pet', pet); 
   test.equal(pet.name, "Fido");
@@ -180,12 +217,15 @@ Tinytest.add('Get "Fido" test function ::  Try with Async.wrap() around anonymou
     )
   });
 
-  var jsonPet = getPetById ( thePet, mimeType );
+  var jsonPet = getPetById ( aPet, mimeType );
   var pet = JSON.parse(jsonPet.data)
   console.log('pet', pet); 
   test.equal(pet.name, "Fido");
 });
 
+/*  ~      ~      ~      ~      ~      ~      ~      ~      ~    */
+/*                PASS functions above  ^ ^ ^                    */
+/*                FAIL functions below  . . .                    */
 /*  ~      ~      ~      ~      ~      ~      ~      ~      ~    */
 
 var theOrder = {orderId: 11};
@@ -223,7 +263,7 @@ Tinytest.add('Get "Fido" test function ::  Try with one of several bulk pre-wrap
 
   var synchronous_functions = collectMethods(swagger, "async");
 
-  var jsonPet = synchronous_functions["pet"]["getPetById"] ( thePet, mimeType );
+  var jsonPet = synchronous_functions["pet"]["getPetById"] ( aPet, mimeType );
   var pet = JSON.parse(jsonPet.data)
   console.log('pet', pet); 
   test.equal(pet.name, "Fido");
