@@ -8,12 +8,12 @@ Package.describe({
 
 Package.onUse(function(api) {
   api.versionsFrom('1.1.0.2');
-  api.addFiles('asyncwraptest.js');
+  api.addFiles('asyncwraptest.js', ['server']);
 });
 
 Package.onTest(function(api) {
   api.use('tinytest');
-  api.use('fleetingclouds:asyncwraptest');
+  api.use('fleetingclouds:asyncwraptest', ['server']);
   api.addFiles('asyncwraptest-tests.js', ['server']);
 });
 
