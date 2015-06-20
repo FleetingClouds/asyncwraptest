@@ -75,8 +75,6 @@ Tinytest.add('Get "Fido" test function ::  Try with Async.wrap()!', function (te
 });
 /*  ~      ~      ~      ~      ~      ~      ~      ~      ~    */
 
-
-
 var getSwaggerProxy = Meteor._wrapAsync( function (swaggerSpecURL, callback) {
   var prxySwagger = new Swagger({
       url: swaggerSpecURL
@@ -91,25 +89,27 @@ var getSwaggerProxy = Meteor._wrapAsync( function (swaggerSpecURL, callback) {
 
 var swagger = getSwaggerProxy(swaggerSpecURL);
 
-    var wrappedGetPetById = Meteor._wrapAsync(  
-      function (arguments, headers, success, error) {
-        swagger["pet"]["getPetById"](
-            arguments
-          , headers
-          , function ( theResult ) {  success(null, theResult);  }
-          , function (  theError ) {    error(null, theError );  }
-        )
-      }
-    );
+var wrappedGetPetById = Meteor._wrapAsync(  
+  function (arguments, headers, success, error) {
+    swagger["pet"]["getPetById"](
+        arguments
+      , headers
+      , function ( theResult ) {  success(null, theResult);  }
+      , function (  theError ) {    error(null, theError );  }
+    )
+  }
+);
 
 
-    Tinytest.add('Get "Fido" test function ::  Try with Async.wrap() succinct!', function (test) {
+Tinytest.add('Get "Fido" test function ::  Try with Async.wrap() succinct!', function (test) {
 
-      var jsonPet = wrappedGetPetById ( aPet, mimeType );
-      var pet = JSON.parse(jsonPet.data)
-      console.log('pet', pet); 
-      test.equal(pet.name, "Fido");
-    });
+  var jsonPet = wrappedGetPetById ( aPet, mimeType );
+  var pet = JSON.parse(jsonPet.data)
+  console.log('pet', pet); 
+  test.equal(pet.name, "Fido");
+
+});
+
 /*  ~      ~      ~      ~      ~      ~      ~      ~      ~    */
 
 
@@ -117,8 +117,8 @@ var getUserByName = function (arguments, headers, success, error) {
   swagger["user"]["getUserByName"](
       arguments
     , headers
-    , function ( theResult ) {  console.log("xxxxxxxxxxxxxxxxxxxxx"); success(null, theResult);  }
-    , function (  theError ) {  console.log("zzzzzzzzzzzzzzzzzzzzz");   error(null, theError);  }
+    , function ( theResult ) {  console.log("xxxx returning success result xxxx"); success(null, theResult);  }
+    , function (  theError ) {  console.log("zzzz returning  error  result zzzz");   error(null, theError);  }
   )
 }
 
@@ -164,8 +164,8 @@ function collectMethods(host, mode) {
                   entity[nameMethod](
                       arguments
                     , headers
-                    , function ( theResult ) {  console.log("xxxxxxxxxxxxxxxxxxxxx"); success(null, theResult);  }
-                    , function (  theError ) {  console.log("zzzzzzzzzzzzzzzzzzzzz");   error(null, theError);  }
+                    , function ( theResult ) {  console.log("xxxx returning success result xxxx"); success(null, theResult);  }
+                    , function (  theError ) {  console.log("zzzz returning  error  result zzzz");   error(null, theError);  }
                   )
                 }
               );
