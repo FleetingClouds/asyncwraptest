@@ -117,8 +117,8 @@ var getUserByName = function (arguments, headers, success, error) {
   swagger["user"]["getUserByName"](
       arguments
     , headers
-    , function ( theResult ) {  console.log("xxxx returning success result xxxx"); success(null, theResult);  }
-    , function (  theError ) {  console.log("zzzz returning  error  result zzzz");   error(null, theError);  }
+    , function ( theResult ) {  console.log("xxxx returning success result (single) xxxx"); success(null, theResult);  }
+    , function (  theError ) {  console.log("zzzz returning  error  result (single) zzzz");   error(null, theError);  }
   )
 }
 
@@ -134,13 +134,28 @@ Tinytest.add('Get user, "Bob" test function with Async.wrap()!', function (test)
 /*  ~      ~      ~      ~      ~      ~      ~      ~      ~    */
 
 function getMethodsByEntities(host) {
-   return {"user":["getUserByName", "foo"], "pet":["getPetById", "bar"], "store":["getOrderById", "bloo"]}
+   return {"user":["getUserByName", "foo", "xhuxk"], "pet":["getPetById", "bar"], "store":["getOrderById", "bloo"]}
+}
+
+function wrapIt( asyncEntities, nameEntity, nameMethod, entity ) {
+
+  asyncEntities[nameEntity][nameMethod] = Meteor._wrapAsync(
+      function (arguments, headers, success, error) {
+        entity[nameMethod](
+            arguments
+          , headers
+          , function ( theResult ) {  console.log("xxxx returning success result (multiple) xxxx"); success(null, theResult);  }
+          , function (  theError ) {  console.log("zzzz returning  error  result (multiple) zzzz");   error(null, theError);  }
+        )
+      }
+  );
 }
 
 function collectMethods(host, mode) {
   var entity_methods = getMethodsByEntities(host);
   var collectedMethods = {}
   for (elem in host) {
+    console.log( "    ..    ..    ..    ..    ..    ..    ..    ..    ..    ..    ..    ..    ..    ..    .." );
     if ("object" === typeof host[elem]  && entity_methods.hasOwnProperty(elem)) {
       var entity = host[elem];
       var required_methods = entity_methods[elem];
@@ -148,30 +163,18 @@ function collectMethods(host, mode) {
 //      console.log('\n\nEntity :: ' + entity );
       for (idx in required_methods) {
         var nameMethod = required_methods[idx];
+        console.log(">>>>>> " + nameMethod + " >> " + entity[nameMethod]);
         if ("function" === typeof entity[nameMethod]) {
-//          console.log( entity[nameMethod] );
+          _self = this;
+          console.log( "entity method is " +  nameMethod);
+          console.log( entity[nameMethod] );
           if (mode === "async") {
 
             collectedMethods[elem][nameMethod] = entity[nameMethod]
 
           } else if (mode === "sync") {
 
-            console.log( "wrapping method :: " + nameMethod);  // >>>>>>>>>>>>>>>>>>>>
-
-
-              collectedMethods[elem][nameMethod] = Meteor._wrapAsync( 
-                function (arguments, headers, success, error) {
-                  entity[nameMethod](
-                      arguments
-                    , headers
-                    , function ( theResult ) {  console.log("xxxx returning success result xxxx"); success(null, theResult);  }
-                    , function (  theError ) {  console.log("zzzz returning  error  result zzzz");   error(null, theError);  }
-                  )
-                }
-              );
-
-            console.log( "wrapped method :: " + nameMethod);  // <<<<<<<<<<<<<<<<<<<<<
-
+            wrapIt(collectedMethods, elem, nameMethod, entity);
           } else {
             console.log( "bad mode" );
           }
@@ -208,12 +211,12 @@ Tinytest.add('Get "Fido" test function ::  Try with Async.wrap() around anonymou
 
   var asynchronous_functions = collectMethods(swagger, "async");
 
-  var getPetById = Meteor._wrapAsync(  function (arguments, headers, done) {
+  var getPetById = Meteor._wrapAsync(  function (arguments, headers, success, error) {
     asynchronous_functions["pet"]["getPetById"](
         arguments
       , headers
-      , function ( theResult ) {  done(null, theResult);  }
-      , function (  theError ) {  done(null,  theError);  }
+      , function ( theResult ) {  success(null, theResult);  }
+      , function (  theError ) {  error(null,  theError);  }
     )
   });
 
@@ -232,7 +235,7 @@ var theOrder = {orderId: 11};
 
 Tinytest.add('Get "S.O. #11" test function ::  Try with one of several bulk pre-wrapped functions !', function (test) {
 
-  var synchronous_functions = collectMethods(swagger, "async");
+  var synchronous_functions = collectMethods(swagger, "sync");
 
   var jsonOrder = synchronous_functions["store"]["getOrderById"] ( theOrder, mimeType );
   var order = JSON.parse(jsonOrder.data)
@@ -242,12 +245,12 @@ Tinytest.add('Get "S.O. #11" test function ::  Try with one of several bulk pre-
 });
 
 
-/*  ~      ~      ~      ~      ~      ~      ~      ~      ~    */
+//  ~      ~      ~      ~      ~      ~      ~      ~      ~    
 
 
 Tinytest.add('Get "Bob" test function ::  Try with one of several bulk pre-wrapped functions !', function (test) {
 
-  var synchronous_functions = collectMethods(swagger, "async");
+  var synchronous_functions = collectMethods(swagger, "sync");
 
   var jsonUser = synchronous_functions["user"]["getUserByName"] ( theUser, mimeType );
   var usr = JSON.parse(jsonUser.data)
@@ -256,14 +259,15 @@ Tinytest.add('Get "Bob" test function ::  Try with one of several bulk pre-wrapp
 });
 
 
-/*  ~      ~      ~      ~      ~      ~      ~      ~      ~    */
+//  ~      ~      ~      ~      ~      ~      ~      ~      ~    
 
 
+var otherPet = {petIc:1991928426};
 Tinytest.add('Get "Fido" test function ::  Try with one of several bulk pre-wrapped functions !', function (test) {
 
-  var synchronous_functions = collectMethods(swagger, "async");
+  var synchronous_functions = collectMethods(swagger, "sync");
 
-  var jsonPet = synchronous_functions["pet"]["getPetById"] ( aPet, mimeType );
+  var jsonPet = synchronous_functions["pet"]["getPetById"] ( otherPet, mimeType );
   var pet = JSON.parse(jsonPet.data)
   console.log('pet', pet); 
   test.equal(pet.name, "Fido");
