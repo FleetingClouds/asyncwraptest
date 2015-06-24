@@ -17,7 +17,7 @@ Tinytest.add('Get "Fido" in console.log. Always returns PASS !', function (test)
   });
   test.equal(true, true);
 });
-/*  ~      ~      ~      ~      ~      ~      ~      ~      ~    */
+//  ~      ~      ~      ~      ~      ~      ~      ~      ~    //
 
 
 var aPet = {petId:1991928426};
@@ -36,7 +36,7 @@ Tinytest.add('Get "Fido" test function but with more succinct command!', functio
 
   test.equal(true, true);
 });
-/*  ~      ~      ~      ~      ~      ~      ~      ~      ~    */
+//  ~      ~      ~      ~      ~      ~      ~      ~      ~    //
 
 
 
@@ -73,7 +73,7 @@ Tinytest.add('Get "Fido" test function ::  Try with Async.wrap()!', function (te
   console.log('pet', pet); 
   test.equal(pet.name, "Fido");
 });
-/*  ~      ~      ~      ~      ~      ~      ~      ~      ~    */
+//  ~      ~      ~      ~      ~      ~      ~      ~      ~    //
 
 var getSwaggerProxy = Meteor._wrapAsync( function (swaggerSpecURL, callback) {
   var prxySwagger = new Swagger({
@@ -110,7 +110,7 @@ Tinytest.add('Get "Fido" test function ::  Try with Async.wrap() succinct!', fun
 
 });
 
-/*  ~      ~      ~      ~      ~      ~      ~      ~      ~    */
+//  ~      ~      ~      ~      ~      ~      ~      ~      ~    //
 
 
 var getUserByName = function (arguments, headers, success, error) {
@@ -118,7 +118,11 @@ var getUserByName = function (arguments, headers, success, error) {
       arguments
     , headers
     , function ( theResult ) {  console.log("xxxx returning success result (single) xxxx"); success(null, theResult);  }
-    , function (  theError ) {  console.log("zzzz returning  error  result (single) zzzz");   error(null, theError);  }
+    , function (  theError ) {  
+        console.log("zzzz returning  error  result (single) zzzz ", theError);
+        throw theError ;
+        error(null, theError);
+      }
   )
 }
 
@@ -131,7 +135,8 @@ Tinytest.add('Get user, "Bob" test function with Async.wrap()!', function (test)
   console.log('usr', usr); 
   test.equal(usr.username, "bob");
 });
-/*  ~      ~      ~      ~      ~      ~      ~      ~      ~    */
+
+//  ~      ~      ~      ~      ~      ~      ~      ~      ~    //
 
 function getMethodsByEntities(host) {
    return {"user":["getUserByName", "foo", "xhuxk"], "pet":["getPetById", "bar"], "store":["getOrderById", "bloo"]}
@@ -144,8 +149,15 @@ function wrapIt( asyncEntities, nameEntity, nameMethod, entity ) {
         entity[nameMethod](
             arguments
           , headers
-          , function ( theResult ) {  console.log("xxxx returning success result (multiple) xxxx"); success(null, theResult);  }
-          , function (  theError ) {  console.log("zzzz returning  error  result (multiple) zzzz");   error(null, theError);  }
+          , function ( theResult ) {
+              console.log("xxxx returning success result (multiple) xxxx");
+              success(null, theResult);
+            }
+          , function (  theError ) {  
+              console.log("zzzz returning  error  result (multiple) zzzz");   
+              throw theError;
+//              error(null, theError);  
+            }
         )
       }
   );
@@ -155,7 +167,6 @@ function collectMethods(host, mode) {
   var entity_methods = getMethodsByEntities(host);
   var collectedMethods = {}
   for (elem in host) {
-    console.log( "    ..    ..    ..    ..    ..    ..    ..    ..    ..    ..    ..    ..    ..    ..    .." );
     if ("object" === typeof host[elem]  && entity_methods.hasOwnProperty(elem)) {
       var entity = host[elem];
       var required_methods = entity_methods[elem];
@@ -163,11 +174,8 @@ function collectMethods(host, mode) {
 //      console.log('\n\nEntity :: ' + entity );
       for (idx in required_methods) {
         var nameMethod = required_methods[idx];
-        console.log(">>>>>> " + nameMethod + " >> " + entity[nameMethod]);
         if ("function" === typeof entity[nameMethod]) {
           _self = this;
-          console.log( "entity method is " +  nameMethod);
-          console.log( entity[nameMethod] );
           if (mode === "async") {
 
             collectedMethods[elem][nameMethod] = entity[nameMethod]
@@ -205,7 +213,7 @@ Tinytest.add('Get "Fido" test function ::  Try with Async.wrap() around pointer 
   test.equal(pet.name, "Fido");
 });
 
-/*  ~      ~      ~      ~      ~      ~      ~      ~      ~    */
+//  ~      ~      ~      ~      ~      ~      ~      ~      ~    //
 
 Tinytest.add('Get "Fido" test function ::  Try with Async.wrap() around anonymous pointer to function !', function (test) {
 
@@ -226,10 +234,10 @@ Tinytest.add('Get "Fido" test function ::  Try with Async.wrap() around anonymou
   test.equal(pet.name, "Fido");
 });
 
-/*  ~      ~      ~      ~      ~      ~      ~      ~      ~    */
-/*                PASS functions above  ^ ^ ^                    */
-/*                FAIL functions below  . . .                    */
-/*  ~      ~      ~      ~      ~      ~      ~      ~      ~    */
+//  ~      ~      ~      ~      ~      ~      ~      ~      ~    //
+//                PASS functions above  ^ ^ ^                    //
+//                FAIL functions below  . . .                    //
+//  ~      ~      ~      ~      ~      ~      ~      ~      ~    //
 
 var theOrder = {orderId: 11};
 
@@ -267,13 +275,17 @@ Tinytest.add('Get "Fido" test function ::  Try with one of several bulk pre-wrap
 
   var synchronous_functions = collectMethods(swagger, "sync");
 
-  var jsonPet = synchronous_functions["pet"]["getPetById"] ( otherPet, mimeType );
-  var pet = JSON.parse(jsonPet.data)
-  console.log('pet', pet); 
-  test.equal(pet.name, "Fido");
+  try {
+    var jsonPet = synchronous_functions["pet"]["getPetById"] ( otherPet, mimeType );
+    var pet = JSON.parse(jsonPet.data)
+    console.log('pet', pet); 
+    test.equal(pet.name, "Fido");
+  } catch (err) {
+    console.log('pet  FAIL    FAIL    FAIL    FAIL  ', err);
+    test.isTrue(false, 'Failed with message : "' + err + '"');
+  }
+
 });
 
-/*  ~      ~      ~      ~      ~      ~      ~      ~      ~    */
-/*  ~      ~      ~      ~      ~      ~      ~      ~      ~    */
-
-
+//  ~      ~      ~      ~      ~      ~      ~      ~      ~    //
+//  ~      ~      ~      ~      ~      ~      ~      ~      ~    */
